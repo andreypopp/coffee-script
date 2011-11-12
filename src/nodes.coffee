@@ -134,6 +134,10 @@ exports.Base = class Base
     continue until node is node = node.unwrap()
     node
 
+  # Wrap node in module
+  wrapInModule: (name = null) ->
+    new Module(name, this)
+
   # Default implementations of the common node properties and methods. Nodes
   # will override these with custom logic, if needed.
   children: []
@@ -242,17 +246,15 @@ exports.Block = class Block extends Base
   # a safety closure, unless requested not to.
   # It would be better not to generate them in the first place, but for now,
   # clean up obvious double-parentheses.
-  compileRoot: (o) ->
-    o.indent = @tab = if o.bare and not o.amd then '' else TAB
+  compileRoot: (o, indent = false) ->
+    o.indent = @tab = if o.bare and not indent then '' else TAB
     o.scope  = new Scope null, this, null
     o.level  = LEVEL_TOP
     @spaced  = yes
     code     = @compileWithDeclarations o
     # the `1` below accounts for `arguments`, always "in scope"
-    if (o.bare or o.scope.variables.length <= 1) and not o.amd
+    if o.bare or o.scope.variables.length <= 1
       code
-    else if o.amd
-      "define(function(require) {\n#{code}\n});"
     else
       "(function() {\n#{code}\n}).call(this);\n"
 
@@ -326,6 +328,45 @@ exports.Literal = class Literal extends Base
 
   toString: ->
     ' "' + @value + '"'
+
+#### Module
+
+# A module declaration statement which wraps block of code
+# and set *amd* compilation flag.
+exports.Module = class Module extends Base
+  constructor: (identifier, block = null) ->
+    @identifier = identifier
+    @block = block
+
+  children:       ['block']
+  isStatement:    YES
+
+  compile: (o, level) ->
+    o.bare = true
+    code = if @block
+      @block.compileRoot(o, true)
+    else
+      ''
+    moduleNamePart = if @identifier
+      "\"#{@identifier}\", "
+    else
+      ''
+    "define(#{moduleNamePart}[\"require\"], function(require) {\n#{code}\n});"
+
+  wrap: (block) ->
+    @block = block
+    this
+
+  toString: (idt = '', name = @constructor.name) ->
+    tree = '\n' + idt + name
+    if @identifier isnt undefined
+      tree += " \"#{@identifier}\""
+    tree += '?' if @soak
+    @eachChild (node) -> tree += node.toString idt + TAB
+    tree
+
+  wrapInModule: (name = null) ->
+    this
 
 #### Return
 

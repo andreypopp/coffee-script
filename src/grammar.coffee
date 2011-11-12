@@ -56,9 +56,19 @@ grammar =
   # The **Root** is the top-level node in the syntax tree. Since we parse bottom-up,
   # all parsing must end here.
   Root: [
+    o 'Module TERMINATOR Body',                 -> $1.wrap $3
     o '',                                       -> new Block
     o 'Body'
     o 'Block TERMINATOR'
+  ]
+
+  Module: [
+    o 'AMD ModuleName',                         -> new Module $2
+    o 'AMD',                                    -> new Module
+  ]
+
+  ModuleName: [
+    o 'IDENTIFIER'
   ]
 
   # Any list of statements and expressions, separated by line breaks or semicolons.

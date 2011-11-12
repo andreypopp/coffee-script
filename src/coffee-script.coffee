@@ -33,7 +33,10 @@ exports.helpers = require './helpers'
 # compiler.
 exports.compile = compile = (code, options = {}) ->
   try
-    (parser.parse lexer.tokenize code).compile options
+    node = parser.parse lexer.tokenize code
+    if options.amd
+      node = node.wrapInModule()
+    node.compile options
   catch err
     err.message = "In #{options.filename}, #{err.message}" if options.filename
     throw err
