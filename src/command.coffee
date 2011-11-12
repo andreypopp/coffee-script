@@ -28,6 +28,7 @@ BANNER = '''
 
 # The list of all the valid option flags that `coffee` knows how to handle.
 SWITCHES = [
+  [      '--amd',             'compile as anonymous AMD, implies -b/--bare']
   ['-b', '--bare',            'compile without a top-level function wrapper']
   ['-c', '--compile',         'compile to JavaScript and save as .js files']
   ['-e', '--eval',            'pass a string from the command line as input']
@@ -241,7 +242,7 @@ parseOptions = ->
   sources       = o.arguments
 
 # The compile-time options to pass to the CoffeeScript compiler.
-compileOptions = (filename) -> {filename, bare: opts.bare}
+compileOptions = (filename) -> {filename, bare: opts.bare, amd: opts.amd}
 
 # Start up a new Node.js instance with the arguments in `--nodejs` passed to
 # the `node` binary, preserving the other options.

@@ -243,14 +243,18 @@ exports.Block = class Block extends Base
   # It would be better not to generate them in the first place, but for now,
   # clean up obvious double-parentheses.
   compileRoot: (o) ->
-    o.indent = @tab = if o.bare then '' else TAB
+    o.indent = @tab = if o.bare and not o.amd then '' else TAB
     o.scope  = new Scope null, this, null
     o.level  = LEVEL_TOP
     @spaced  = yes
     code     = @compileWithDeclarations o
     # the `1` below accounts for `arguments`, always "in scope"
-    return code if o.bare or o.scope.variables.length <= 1
-    "(function() {\n#{code}\n}).call(this);\n"
+    if (o.bare or o.scope.variables.length <= 1) and not o.amd
+      code
+    else if o.amd
+      "define(function(require) {\n#{code}\n});"
+    else
+      "(function() {\n#{code}\n}).call(this);\n"
 
   # Compile the expressions body for the contents of a function, with
   # declarations of all inner variables pushed up to the top.
