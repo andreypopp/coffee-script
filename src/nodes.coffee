@@ -351,7 +351,7 @@ exports.Module = class Module extends Base
       "\"#{@identifier}\", "
     else
       ''
-    "define(#{moduleNamePart}[\"require\"], function(require) {\n#{code}\n});"
+    "define(#{moduleNamePart}[\"require\"], function(require) {\n#{code}\n});\n"
 
   wrap: (block) ->
     @block = block
